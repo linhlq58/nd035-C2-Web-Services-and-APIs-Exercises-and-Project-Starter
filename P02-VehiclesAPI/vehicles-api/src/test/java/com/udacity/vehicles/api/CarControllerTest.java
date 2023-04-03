@@ -1,18 +1,13 @@
 package com.udacity.vehicles.api;
 
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.udacity.vehicles.client.maps.MapsClient;
 import com.udacity.vehicles.client.prices.PriceClient;
 import com.udacity.vehicles.domain.Condition;
@@ -22,7 +17,6 @@ import com.udacity.vehicles.domain.car.Details;
 import com.udacity.vehicles.domain.manufacturer.Manufacturer;
 import com.udacity.vehicles.service.CarService;
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.Collections;
 import org.junit.Before;
 import org.junit.Test;
@@ -36,6 +30,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 /**
  * Implements testing of the CarController class.
@@ -146,6 +141,22 @@ public class CarControllerTest {
         verify(carService, times(1)).delete(1L);
     }
 
+    @Test
+    public void updateCar() throws Exception {
+        Car updatedCar = getCar();
+        updatedCar.setId(1L);;
+        updatedCar.setCondition(Condition.NEW);
+        Details newDetails = updatedCar.getDetails();
+        newDetails.setModel("BMW");
+        updatedCar.setDetails(newDetails);
+        mvc.perform(MockMvcRequestBuilders
+                        .put("/cars/1")
+                        .content(new ObjectMapper().writeValueAsString(updatedCar))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+    }
+
     /**
      * Creates an example Car object for use in testing.
      * @return an example Car object
@@ -153,6 +164,7 @@ public class CarControllerTest {
     private Car getCar() {
         Car car = new Car();
         car.setLocation(new Location(40.730610, -73.935242));
+        car.setId(1L);
         Details details = new Details();
         Manufacturer manufacturer = new Manufacturer(101, "Chevrolet");
         details.setManufacturer(manufacturer);
